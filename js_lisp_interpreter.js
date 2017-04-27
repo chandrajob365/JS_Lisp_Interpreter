@@ -8,28 +8,22 @@ return read_from_tokens(tokenize(input));
 
 function read_from_tokens(tokens){
     var token = tokens.shift()
-    //console.log("token--->",token , "tokens--->",tokens)
     if(token === '('){
       var expr = [];
       while(tokens[0] !== ')'){
-      //  console.log("Inside while tokens[0]--->",tokens[0]);
         expr.push(read_from_tokens(tokens))
-        //console.log("expr--->",expr);
 
       }
-      //console.log("before shift tokens-->",tokens);
       tokens.shift()
-    //  console.log("after shift tokens-->",tokens);
       return expr
     }
     if(token === ')')
-      console.log("Unexpected )")
-      //throw new Error("unexpected )")
+      //console.log("Unexpected )")
+      throw new Error("unexpected )")
   return atom(token)
 }
 
 function atom(token){
-//  console.log("From atom token = ",token);
   var float
   if(!isNaN(float = parseFloat(token))) return float
   return token
@@ -54,7 +48,7 @@ var standard_env = {
   'append' : function (a, b) { return String(a) + String(b)},
   'length' : function (a) { return a.length},
   //'max' : return Math.max
-  'pi' : function () { return 3.14},
+  'pi' : 3.14,
   'begin' : function (arr_input) { return arr_input[arr_input.length-1]},
   'car' : function (arr_input) { return arr_input[0]},
   'cdr' : function (arr_input) { return arr_input.length !== 0 ?  arr_input.slice(1) : null },
@@ -62,18 +56,16 @@ var standard_env = {
 
 }
 
-var global_env = standard_env
+var global_env = new Env()
+global_env.dict = standard_env
 
 function operation(operand , operator){
-  console.log("operand->",operand);
   return operand.reduce(function(acc,elm){
-    console.log("elm-->",elm , "acc-->",acc)
     return operator_handler(eval(acc), operator, eval(elm))
   })
 }
 
 function operator_handler(op1 , operator , op2){
-  console.log("acc-->",op1," operator ",operator," --op2-->",op2);
   switch (operator) {
     case '+': return op1 + op2
               break
@@ -135,91 +127,78 @@ function lt(arr){
 }
 
 function ifEvaluator(arr){
-  var t = eval(arr[0])
-  console.log("eval(arr[0])->",t);
-  if(t)
+  if(eval(arr[0]))
     return eval(arr[1])
   else return eval(arr[2])
 }
 
-function procedure(obj){
-  this.params = obj.params
-  this.body = obj.body
-  this.env = this.env
+function procedure(params,body,env){
+  this.params = params
+  this.body = body
+  this.env = env
   return function(args){
     return eval(this.body, Env(this.params, args, this.env))
   }
 }
 
-function Env(params, args, env){
+function Env(params, args, outer){
   this.dict = {}
   this.outer = outer
-  this.find = function(name){
-    if(name in this.dict) return this.dict[name]
-    return outer.find(name)
+  this.find = function(key){
+    if(key in this.dict) return this.dict[key]
+    return this.outer.find(key)
   }
+  this.set = function(key, value){ return this.dict[key] = value}
   if(params && args){
     if(params instanceof Array){
-      for(var i = 0 ; i < parms.length ; i++){
-        this.dict[parms[i]] = parseInt(args[i])
+      for(var i = 0 ; i < params.length ; i++){
+        this.set(params[i], parseInt(args[i]))
       }
     }
+    this.set (params, parseInt(args))
   }
 
 }
 
-function eval(input , env = global_env){
-  console.log('Entry eval input-->',input);
-  if(env[input]){
-    console.log('Inside , if input is there in global env --input-->',input,"----value in global_env-->", env[input]);
-    return env[input]
-  }else if(input.constructor !== Array){
-    console.log('Inside if not array');
+function eval(input , env){
+  env = env || global_env
+  if(typeof input === 'number'){
     return input
+  }else if(typeof input === 'string'){
+    return env.find(input)
+  }else if(input.constructor !== Array){
+    return input
+  }else if(input[0] === 'quote'){
+    return input[1].join(' ')
   }else if(input[0] === 'if'){
-    console.log("Inside if first value is --if--");
-    input = input.slice(1)
-    var exp = ifEvaluator(input)
-    console.log("result from ifEvaluator inside eval --- exp--->",exp);
-    return exp
-    //eval(exp,env)
+    return ifEvaluator(input.slice(1))
   }else if(input[0] === 'define'){
-    console.log('Inside if first value is --define--')
-    env[input[1]] = eval(input[2],env)
+    var res = eval(input[2],env)
+  env.set(input[1],res)
+  }else if(input[0] === 'set!'){
+    if(env.find(input[1]) !== undefined){
+      env.set(input[1], eval(input[2],env))
+    }
   }else if(input[0] === 'lambda'){
-    return procedure({params : input[1] , body : input[2] , env : env})
+    return procedure(input[1], input[2], env)
   }
   else{
-    console.log('Inside last else condtion...input[0]=',input[0]);
     var proc = eval(input[0],env)
-    console.log('Inside last else condtion... proc -> ',proc);
-    console.log("Inside last else condtion... input.slice(1)=",input.slice(1));
     var args = input.slice(1).map(function(elm){
-                console.log("Inside map of last else condition... elm = ",elm);
-                var val = eval(elm,env);
-                console.log("Inside map of last else condition... val = ",val);
-              return val
+                return eval(elm,env);
     })
-    console.log('Inside last else condtion... args -> ',args);
     return proc(args)
   }
 }
 
 
-var program = "(begin (define r 10) (define x 2) (define y 7) (* r (+ r (/ r (- y x)))))"
-//var program = "((define x 20) (define y 15) (define z 4) (mod z (mod x y)))"
-//var program = "((define x 20) (define y 15) (define z 4) (min z (min y y) z))"
-//var program = "(begin (define x (+ 20 3)) (define y 15) (define z 4)((if (> x y) + *) x y))"
+//var program = "(begin (define r 10) (define x 2) (define y 7) (* r (+ r (/ r (- y x)))))"
+//var program = "(begin (define x 20) (define y 15) (define z 4) (mod z (mod x y)))"
+//var program = "(begin (define x 20) (define y 15) (define z 4) (min z (min y y) z))"
+//var program = "(begin (define x (+ 20 3)) (define y 15) (define z 4)((if (> y y) + *) x y))"
 //var program = "(begin (list 0 1 2 3 0 0))"
+//var program = "(begin (define r 10) (define circle_area (lambda (r) (* pi (* r r)))) (circle_area 5))"
+//var program = "(begin (quote (The greater combined area of 1,2,3 vs 4,5,6:)))"
+//var program = "(begin (define r 0) (set! r (+ 3 2)))";
 var arr = parse(program);
-console.log("arr-->",arr);
 console.log("result from getValue--->",eval(arr));
-console.log('global_env->',global_env);
-console.log("standard_env-->",standard_env);
-
-//console.log(global_env);
-//var program = "(define r 10)"
- // expr---> [ [ 'define', 'r', 10 ], [ '*', 'r', 'r', 'r' ] ,[]]
-//console.log("expr--->",arr);
-//console.log(global_env);
-//"((define r1 16) (define r2 2) (define r3 4) (= r1 r2 r3))"

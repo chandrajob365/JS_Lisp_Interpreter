@@ -173,8 +173,7 @@ function eval(input , env){
   }else if(input[0] === 'if'){
     return ifEvaluator(input.slice(1))
   }else if(input[0] === 'define'){
-    var res = eval(input[2],env)
-  env.set(input[1],res)
+    env.set(input[1],eval(input[2],env))
   }else if(input[0] === 'set!'){
     if(env.find(input[1]) !== undefined){
       env.set(input[1], eval(input[2],env))
@@ -197,8 +196,12 @@ function eval(input , env){
 //var program = "(begin (define x 20) (define y 15) (define z 4) (min z (min y y) z))"
 //var program = "(begin (define x (+ 20 3)) (define y 15) (define z 4)((if (> y y) + *) x y))"
 //var program = "(begin (list 0 1 2 3 0 0))"
-var program = "(begin (define r 10) (define circle_area (lambda (r) (* pi (* r r)))) (circle_area 5))"
+//var program = "(begin (define r 10) (define circle_area (lambda (r) (* pi (* r r)))) (circle_area 5))"
 //var program = "(begin (quote (The greater combined area of 1,2,3 vs 4,5,6:)))"
 //var program = "(begin (define r 0) (set! r (+ 3 2)))";
+//var program = "(begin (define r 2) (define test (lambda (r s) (* pi (* (+ r s)(lambda (v) (+ v v) 50))))) (test 10 10))"
+var program = "(begin (define manish (lambda (t) ( * (- 200 t) (lambda (v) (+ v v) 50)))) (manish 10))"
+//var program = "(begin (define manish (lambda (t) (- 200 t) (lambda (v) (+ v v) (lambda (s) (+ s s) 30)))) (manish 10))"
 var arr = parse(program);
+console.log("arr-->",arr);
 console.log("result from getValue--->",eval(arr));

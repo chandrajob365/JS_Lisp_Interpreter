@@ -197,6 +197,7 @@ function eval(input , env){
 //var program = "(begin (define x (+ 20 3)) (define y 15) (define z 4)((if (> y y) + *) x y))"
 //var program = "(begin (list 0 1 2 3 0 0))"
 //var program = "(begin (define r 10) (define circle_area (lambda (r) (* pi (* r r)))) (circle_area 5))"
+var program ="(begin (define makeAccount (lambda (balance) (lambda (amt) (begin (set! balance (+ balance amt)) balance)))) (define account1 (makeAccount 100)) (account1 -20)))"
 //var program = "(begin (quote (The greater combined area of 1,2,3 vs 4,5,6:)))"
 //var program = "(begin (define r 0) (set! r (+ 3 2)))";
 

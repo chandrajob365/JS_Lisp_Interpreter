@@ -199,9 +199,7 @@ function eval(input , env){
 //var program = "(begin (define r 10) (define circle_area (lambda (r) (* pi (* r r)))) (circle_area 5))"
 //var program = "(begin (quote (The greater combined area of 1,2,3 vs 4,5,6:)))"
 //var program = "(begin (define r 0) (set! r (+ 3 2)))";
-//var program = "(begin (define r 2) (define test (lambda (r s) (* pi (* (+ r s)(lambda (v) (+ v v) 50))))) (test 10 10))"
-var program = "(begin (define manish (lambda (t) ( * (- 200 t) (lambda (v) (+ v v) 50)))) (manish 10))"
-//var program = "(begin (define manish (lambda (t) (- 200 t) (lambda (v) (+ v v) (lambda (s) (+ s s) 30)))) (manish 10))"
+
 var arr = parse(program);
-console.log("arr-->",arr);
+//console.log("arr-->",arr);
 console.log("result from getValue--->",eval(arr));

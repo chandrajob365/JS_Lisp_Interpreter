@@ -162,17 +162,17 @@ function Env(params, args, outer){
 
 function eval(input , env){
   env = env || global_env
-  if(typeof input === 'number'){
+  if(typeof input === 'number')
     return input
-  }else if(typeof input === 'string'){
+  if(typeof input === 'string')
     return env.find(input)
-  }else if(input.constructor !== Array){
+  if(input.constructor !== Array)
     return input
-  }else if(input[0] === 'quote'){
+  if(input[0] === 'quote')
     return input[1].join(' ')
-  }else if(input[0] === 'if'){
+  if(input[0] === 'if')
     return ifEvaluator(input.slice(1))
-  }else if(input[0] === 'define'){
+  if(input[0] === 'define'){
     env.set(input[1],eval(input[2],env))
   }else if(input[0] === 'set!'){
     if(env.find(input[1]) !== undefined){
